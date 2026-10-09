@@ -533,16 +533,21 @@ export async function verifyResponse(rawBytes, policy, requestBytes) {
   await check('PCR0 与可信公开参考值一致',()=>att?.pcr0===policy.pcr0);
   await check('签名公钥由硬件证明绑定',()=>att?.publicKey===t.public_key);
   await check('证明与签名的 nonce 一致',()=>att?.nonce===t.nonce);
-  await check('官方来源与原生接口一致',()=>t.upstream_host===policy.host&&t.upstream_path==='/v1/messages'&&t.http_method==='POST'&&t.http_status===200&&t.resp_content_type.startsWith('text/event-stream'));
+  await check('官方来源与原生接口一致',()=>t.upstream_host===policy.host&&t.upstream_path===(policy.path||'/v1/messages')&&t.http_method==='POST'&&t.http_status===200&&(t.resp_content_type.startsWith('text/event-stream')||(policy.allowEmptyContentType===true&&t.resp_content_type==='')));
   await check('Ed25519 声明签名有效',async()=>edVerify(await importSpkiB64(t.public_key),t.signature,buildV2Statement(t)));
   await check('响应正文未被篡改',async()=>bytesToHex(await sha256(body))===t.response_body_sha256);
   const events=td.decode(body).split(/\r?\n\r?\n/).map(record=>{
     const data=record.split(/\r?\n/).filter(line=>line.startsWith('data:')).map(line=>line.slice(5).trimStart()).join('\n');
     try{return JSON.parse(data);}catch{return null;}
   });
-  const model=events.find(event=>event?.type==='message_start')?.message?.model;
-  await check('签名覆盖的模型与预期一致',()=>model===policy.model);
-  await check('响应包含完整结束事件',()=>events.some(event=>event?.type==='message_stop'));
+  const models=[...new Set(events.flatMap(event=>[event?.model,event?.message?.model,event?.response?.model].filter(Boolean)))];
+  const model=models.length===1?models[0]:undefined;
+  await check('签名覆盖的模型与预期一致',()=>model===(policy.signedModel||policy.model));
+  await check('响应包含完整结束事件',()=>policy.route==='/v1/responses'
+    ? events.some(event=>event?.type==='response.completed'&&event.response?.status==='completed')
+    : policy.route==='/v1/chat/completions'
+      ? events.some(event=>event?.choices?.some(choice=>['stop','length','tool_calls'].includes(choice.finish_reason)))&&td.decode(body).includes('data: [DONE]')
+      : events.some(event=>event?.type==='message_stop'));
   const mode=requestBytes===undefined?'response-only':'full';
   if(requestBytes!==undefined) {
     if(!(requestBytes instanceof Uint8Array)||requestBytes.length>1024*1024)throw new Error('请求文件超过 1 MiB 或格式错误');

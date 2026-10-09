@@ -1,17 +1,18 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EonAI · 响应验证</title><style>:root{color-scheme:light;--ink:#18332e;--muted:#64756f;--line:#dbe5df;--accent:#17664d;--paper:#f5f7f3}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.7 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}header{max-width:1080px;margin:auto;padding:26px 30px;display:flex;justify-content:space-between;align-items:center}.brand{font-size:24px;font-weight:750;letter-spacing:-1px}.brand span{font-size:13px;margin-left:14px;font-weight:400;letter-spacing:0;color:var(--muted)}nav{display:flex;gap:26px;font-size:13px}main{max-width:920px;margin:40px auto 80px;padding:0 30px}.eyebrow,.step{font-size:12px;letter-spacing:1.5px;color:var(--accent);font-weight:650}h1{font-size:clamp(30px,4vw,43px);line-height:1.3;letter-spacing:-1px;margin:14px 0}h2{font-size:21px;margin:12px 0}p{color:var(--muted);margin:10px 0}.intro{max-width:660px;font-size:16px;margin-bottom:32px}section{border:1px solid var(--line);border-radius:18px;padding:30px;margin:22px 0;background:white}.file-button,button{display:inline-block;border:0;border-radius:9px;background:var(--accent);color:white;padding:12px 20px;font:inherit;cursor:pointer}.file-button{margin:14px 12px 4px 0}#filename{font-size:13px;color:var(--muted);overflow-wrap:anywhere}.or{font-size:13px;color:var(--muted);margin:18px 0 8px}textarea{width:100%;height:145px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:14px;background:#fafcf9;color:var(--ink);font:12px/1.6 ui-monospace,monospace}textarea:focus{outline:2px solid #8bc0a9}.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:22px}.secondary{background:#edf2ed;color:var(--ink)}button:disabled{opacity:.6;cursor:wait}details{margin-top:18px;font-size:13px}summary{cursor:pointer;color:var(--accent)}details p{margin-top:12px}code,pre{font-family:ui-monospace,monospace;font-size:12px}pre{background:#f2f6f1;border-radius:9px;padding:18px;white-space:pre-wrap;overflow-wrap:anywhere}.fingerprint{display:block;padding:12px;background:#f2f6f1;overflow-wrap:anywhere}.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:20px 0;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}.facts strong{display:block;font-size:14px;margin-top:7px;color:var(--ink);overflow-wrap:anywhere}#checks{list-style:none;margin:15px 0 0;padding:0}#checks li{padding:8px 0;display:flex;gap:10px;font-size:14px}.pass{color:var(--accent)}.fail{color:#a73c38}.result.failed{border-color:#e0b4ae}.result.passed{border-color:#7fbaa0}footer{max-width:920px;padding:0 30px 35px;margin:auto;color:var(--muted);font-size:12px;display:flex;gap:24px;flex-wrap:wrap}@media(max-width:620px){header{padding:20px}nav{gap:12px;font-size:12px}.brand span{display:none}main{margin-top:25px;padding:0 18px}section{padding:22px}.facts{grid-template-columns:1fr}.actions button{flex:1}footer{padding:0 20px 25px}}
+select{display:block;width:100%;margin:12px 0 8px;padding:13px;border:1px solid #d2dacb;border-radius:8px;background:#fff;color:#263626;font:inherit}
 </style></head>
 <body><header><a class="brand" href="https://eonaibusiness.com">EonAI<span>响应验证</span></a><nav><a href="https://github.com/cc1252/eonai-proof-verifier" target="_blank" rel="noopener">开源资料 ↗</a><a href="https://eonaibusiness.com">返回中转站</a></nav></header>
 <main><div class="eyebrow">在你的浏览器里独立验证</div><h1>确认来源，检查响应是否完整。</h1><p class="intro">上传完整 API 响应，核对官方来源、模型与签名。文件在本机处理，不上传服务器，也不需要 API Key。</p>
-<section class="upload"><div class="step">01 · 选择响应</div><h2>把完整响应文件放到这里</h2><p>应包含响应正文及末尾的 <code>tee.proof</code>。仅上传证明，无法确认正文完整。</p><label class="file-button" for="response">选择响应文件</label><input id="response" type="file" accept=".sse,.txt,.json,.bin" hidden><span id="filename">尚未选择文件</span><div class="or">或者粘贴完整响应</div><textarea id="paste" placeholder="event: message_start&#10;data: …&#10;&#10;event: tee.proof&#10;data: …" aria-label="完整响应内容"></textarea>
+<section class="upload"><div class="step">01 · 选择响应</div><h2>把完整响应文件放到这里</h2><p>应包含响应正文及末尾的 <code>tee.proof</code>。仅上传证明，无法确认正文完整。</p><label for="expected-model">先选择你实际调用的模型</label><select id="expected-model" aria-label="预期调用模型"></select><p>模型、官方端点和原生协议按可信目录核对，不从上传的证明里自动采信。</p><label class="file-button" for="response">选择响应文件</label><input id="response" type="file" accept=".sse,.txt,.json,.bin" hidden><span id="filename">尚未选择文件</span><div class="or">或者粘贴完整响应</div><textarea id="paste" placeholder="event: message_start&#10;data: …&#10;&#10;event: tee.proof&#10;data: …" aria-label="完整响应内容"></textarea>
 <details><summary>同时验证请求是否完全一致（可选）</summary><p>上传自己实际发送的原始请求文件。当前通道的请求哈希实测不一致，完整请求验证会失败；仅验证响应不能确认供应商未修改请求。</p><input id="request" type="file" accept=".json,.txt,.bin" aria-label="原始请求文件"></details>
 <div class="actions"><button id="verify">开始本机验证</button><button id="clear" class="secondary">清空材料</button><span id="progress" role="status" aria-live="polite"></span></div></section>
 <section id="result" class="result" hidden aria-live="polite"><div class="step">02 · 验证结果</div><h2 id="verdict"></h2><p id="scope"></p><div class="facts"><div>官方来源<strong id="host">未确认</strong></div><div>响应中的模型<strong id="model">未确认</strong></div><div>验证范围<strong id="mode"></strong></div></div><ul id="checks"></ul></section>
-<section class="help"><h2>客户如何拿到验证材料？</h2><p>使用你的中转站客户令牌，通过下方入口发送原生 Anthropic 流式请求，保存完整响应文件，再回到这里上传。</p><pre>Base URL: https://api.eonaibusiness.com/verified/response
-接口：POST /v1/messages
-模型：claude-opus-5-5
+<section class="help"><h2>客户如何拿到验证材料？</h2><p>使用你的中转站客户令牌，通过下方入口发送模型对应的原生流式请求，保存完整响应文件，再回到这里上传。GPT 和 Grok 走 Responses；Claude、Kimi 与已验证的火山模型走 Messages。</p><pre>Base URL: https://api.eonaibusiness.com/verified/response
+Claude / Kimi / 火山模型：POST /v1/messages
+GPT / Grok：POST /v1/responses
 stream: true
-max_tokens: 1–8192</pre><p>先完成验证再返回响应，因此不会立即逐 token 输出。Windows 请使用 <code>curl.exe -o response.sse</code> 保存原始字节。</p><details><summary>可信参考值与验证边界</summary><p>我们转交供应商生成的硬件证明，未自行运行该证明的 Nitro enclave。浏览器固定 AWS Nitro G1 根指纹和下列公开 PCR0，不接受上传文件自报的参考值。</p><code class="fingerprint" id="pcr"></code><p>来源与响应验证可以确认官方端点及响应字节完整性；不能确认内部模型权重，也不能确认供应商未修改请求。证书过期会失败；相同请求之间的旧响应重放不由本协议完全解决。</p><p>你可以下载开源版本，在自己的本机离线验证，无需信任本站提供的绿色提示。源码及版权来源保留在开源仓库的 NOTICE 和许可证中。</p></details></section>
+输出上限：1–8192</pre><p>先完成验证再返回响应，因此不会立即逐 token 输出。缺少证明、上游出错或核验失败时拒绝返回结果。Windows 请使用 <code>curl.exe -o response.sse</code> 保存原始字节。</p><details><summary>可信参考值与验证边界</summary><p>我们转交供应商生成的硬件证明，未自行运行该证明的 Nitro enclave。浏览器固定 AWS Nitro G1 根指纹和下列公开 PCR0，不接受上传文件自报的参考值。</p><code class="fingerprint" id="pcr"></code><p>来源与响应验证可以确认官方端点及响应字节完整性；不能确认内部模型权重，也不能确认供应商未修改请求。证书过期会失败；相同请求之间的旧响应重放不由本协议完全解决。</p><p>你可以下载开源版本，在自己的本机离线验证，无需信任本站提供的绿色提示。源码及版权来源保留在开源仓库的 NOTICE 和许可证中。</p></details></section>
 </main><footer>本机处理 · 无 API Key · 无文件上传<a href="/verify/verify-offline.html" download>下载离线验证器</a><a href="/verify/NOTICE.txt">版权与来源</a><a href="/verify/LICENSE">许可证</a></footer><script type="module">// SPDX-License-Identifier: MIT OR Apache-2.0
 // Derived from proof-of-observation bf21141f0a76090061d1a0a6709688618ff753c8.
 // Browser parser hardening and EonAI policy are modifications; see NOTICE.
@@ -547,16 +548,21 @@ async function verifyResponse(rawBytes, policy, requestBytes) {
   await check('PCR0 与可信公开参考值一致',()=>att?.pcr0===policy.pcr0);
   await check('签名公钥由硬件证明绑定',()=>att?.publicKey===t.public_key);
   await check('证明与签名的 nonce 一致',()=>att?.nonce===t.nonce);
-  await check('官方来源与原生接口一致',()=>t.upstream_host===policy.host&&t.upstream_path==='/v1/messages'&&t.http_method==='POST'&&t.http_status===200&&t.resp_content_type.startsWith('text/event-stream'));
+  await check('官方来源与原生接口一致',()=>t.upstream_host===policy.host&&t.upstream_path===(policy.path||'/v1/messages')&&t.http_method==='POST'&&t.http_status===200&&(t.resp_content_type.startsWith('text/event-stream')||(policy.allowEmptyContentType===true&&t.resp_content_type==='')));
   await check('Ed25519 声明签名有效',async()=>edVerify(await importSpkiB64(t.public_key),t.signature,buildV2Statement(t)));
   await check('响应正文未被篡改',async()=>bytesToHex(await sha256(body))===t.response_body_sha256);
   const events=td.decode(body).split(/\r?\n\r?\n/).map(record=>{
     const data=record.split(/\r?\n/).filter(line=>line.startsWith('data:')).map(line=>line.slice(5).trimStart()).join('\n');
     try{return JSON.parse(data);}catch{return null;}
   });
-  const model=events.find(event=>event?.type==='message_start')?.message?.model;
-  await check('签名覆盖的模型与预期一致',()=>model===policy.model);
-  await check('响应包含完整结束事件',()=>events.some(event=>event?.type==='message_stop'));
+  const models=[...new Set(events.flatMap(event=>[event?.model,event?.message?.model,event?.response?.model].filter(Boolean)))];
+  const model=models.length===1?models[0]:undefined;
+  await check('签名覆盖的模型与预期一致',()=>model===(policy.signedModel||policy.model));
+  await check('响应包含完整结束事件',()=>policy.route==='/v1/responses'
+    ? events.some(event=>event?.type==='response.completed'&&event.response?.status==='completed')
+    : policy.route==='/v1/chat/completions'
+      ? events.some(event=>event?.choices?.some(choice=>['stop','length','tool_calls'].includes(choice.finish_reason)))&&td.decode(body).includes('data: [DONE]')
+      : events.some(event=>event?.type==='message_stop'));
   const mode=requestBytes===undefined?'response-only':'full';
   if(requestBytes!==undefined) {
     if(!(requestBytes instanceof Uint8Array)||requestBytes.length>1024*1024)throw new Error('请求文件超过 1 MiB 或格式错误');
@@ -567,17 +573,225 @@ async function verifyResponse(rawBytes, policy, requestBytes) {
     restoredLineEndings:normalized.restoredLfLineEndings||0,savedEncoding:decoded.encoding};
 }
 
-// Trusted reference value, never adopted from an uploaded proof.
+// Trusted models and official routes, never adopted from uploaded evidence.
 const POLICY = Object.freeze({
-  model: 'claude-opus-5-5',
-  host: 'api.anthropic.com',
-  pcr0: '437cbab8c2e5dd11a35ae5b062fe115623a013910b7c26b333e2b3af477944d630fb1dcd76fa9a9b1eefdf1d1021dec2'
+  "model": "claude-opus-5-5",
+  "host": "api.anthropic.com",
+  "pcr0": "437cbab8c2e5dd11a35ae5b062fe115623a013910b7c26b333e2b3af477944d630fb1dcd76fa9a9b1eefdf1d1021dec2",
+  "models": {
+    "claude-fable-5": {
+      "host": "api.anthropic.com",
+      "path": "/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "claude-fable-5"
+    },
+    "claude-fable-5-1": {
+      "host": "api.anthropic.com",
+      "path": "/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "claude-fable-5-1"
+    },
+    "claude-haiku-4-5": {
+      "host": "api.anthropic.com",
+      "path": "/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "claude-haiku-4-5-20251001"
+    },
+    "claude-haiku-5-5": {
+      "host": "api.anthropic.com",
+      "path": "/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "claude-haiku-5-5"
+    },
+    "claude-opus-4-6": {
+      "host": "api.anthropic.com",
+      "path": "/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "claude-opus-4-6"
+    },
+    "claude-opus-4-7": {
+      "host": "api.anthropic.com",
+      "path": "/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "claude-opus-4-7"
+    },
+    "claude-opus-4-8": {
+      "host": "api.anthropic.com",
+      "path": "/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "claude-opus-4-8"
+    },
+    "claude-opus-5": {
+      "host": "api.anthropic.com",
+      "path": "/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "claude-opus-5"
+    },
+    "claude-opus-5-5": {
+      "host": "api.anthropic.com",
+      "path": "/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "claude-opus-5-5"
+    },
+    "claude-sonnet-4-5": {
+      "host": "api.anthropic.com",
+      "path": "/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "claude-sonnet-4-5-20250929"
+    },
+    "claude-sonnet-4-6": {
+      "host": "api.anthropic.com",
+      "path": "/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "claude-sonnet-4-6"
+    },
+    "claude-sonnet-5": {
+      "host": "api.anthropic.com",
+      "path": "/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "claude-sonnet-5"
+    },
+    "claude-sonnet-5-5": {
+      "host": "api.anthropic.com",
+      "path": "/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "claude-sonnet-5-5"
+    },
+    "deepseek-v4-flash": {
+      "host": "ark.cn-beijing.volces.com",
+      "path": "/api/coding/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "deepseek-v4-flash-ga-260731"
+    },
+    "deepseek-v4-pro": {
+      "host": "ark.cn-beijing.volces.com",
+      "path": "/api/coding/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "deepseek-v4-pro"
+    },
+    "doubao-seed-2.0-mini": {
+      "host": "ark.cn-beijing.volces.com",
+      "path": "/api/coding/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "doubao-seed-2-0-mini"
+    },
+    "doubao-seed-2.1-lite": {
+      "host": "ark.cn-beijing.volces.com",
+      "path": "/api/coding/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "doubao-seed-2-1-lite"
+    },
+    "doubao-seed-2.1-pro": {
+      "host": "ark.cn-beijing.volces.com",
+      "path": "/api/coding/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "doubao-seed-2-1-pro"
+    },
+    "gpt-5.5": {
+      "host": "chatgpt.com",
+      "path": "/backend-api/codex/responses",
+      "route": "/v1/responses",
+      "signedModel": "gpt-5.5",
+      "allowEmptyContentType": true
+    },
+    "gpt-5.6-luna": {
+      "host": "chatgpt.com",
+      "path": "/backend-api/codex/responses",
+      "route": "/v1/responses",
+      "signedModel": "gpt-5.6-luna",
+      "allowEmptyContentType": true
+    },
+    "gpt-5.6-sol": {
+      "host": "chatgpt.com",
+      "path": "/backend-api/codex/responses",
+      "route": "/v1/responses",
+      "signedModel": "gpt-5.6-sol",
+      "allowEmptyContentType": true
+    },
+    "gpt-5.6-terra": {
+      "host": "chatgpt.com",
+      "path": "/backend-api/codex/responses",
+      "route": "/v1/responses",
+      "signedModel": "gpt-5.6-terra",
+      "allowEmptyContentType": true
+    },
+    "gpt-6-astra": {
+      "host": "chatgpt.com",
+      "path": "/backend-api/codex/responses",
+      "route": "/v1/responses",
+      "signedModel": "gpt-6-astra",
+      "allowEmptyContentType": true
+    },
+    "gpt-6-luna": {
+      "host": "chatgpt.com",
+      "path": "/backend-api/codex/responses",
+      "route": "/v1/responses",
+      "signedModel": "gpt-6-luna",
+      "allowEmptyContentType": true
+    },
+    "gpt-6-sol": {
+      "host": "chatgpt.com",
+      "path": "/backend-api/codex/responses",
+      "route": "/v1/responses",
+      "signedModel": "gpt-6-sol",
+      "allowEmptyContentType": true
+    },
+    "gpt-6.1-sol": {
+      "host": "chatgpt.com",
+      "path": "/backend-api/codex/responses",
+      "route": "/v1/responses",
+      "signedModel": "gpt-6.1-sol",
+      "allowEmptyContentType": true
+    },
+    "grok-4.3": {
+      "host": "api.x.ai",
+      "path": "/v1/responses",
+      "route": "/v1/responses",
+      "signedModel": "grok-4.3"
+    },
+    "grok-4.5": {
+      "host": "api.x.ai",
+      "path": "/v1/responses",
+      "route": "/v1/responses",
+      "signedModel": "grok-4.5"
+    },
+    "grok-4.6": {
+      "host": "api.x.ai",
+      "path": "/v1/responses",
+      "route": "/v1/responses",
+      "signedModel": "grok-4.6"
+    },
+    "grok-4.7": {
+      "host": "api.x.ai",
+      "path": "/v1/responses",
+      "route": "/v1/responses",
+      "signedModel": "grok-4.7"
+    },
+    "kimi-for-coding": {
+      "host": "api.kimi.com",
+      "path": "/coding/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "kimi-for-coding"
+    },
+    "kimi-k3": {
+      "host": "api.kimi.com",
+      "path": "/coding/v1/messages",
+      "route": "/v1/messages",
+      "signedModel": "k3"
+    }
+  }
 });
 
 const $=id=>document.getElementById(id);
 $('pcr').textContent=POLICY.pcr0;
+const select=$('expected-model');
+for(const [model,entry] of Object.entries(POLICY.models||{[POLICY.model]:POLICY})) {
+ const option=document.createElement('option');option.value=model;option.textContent=model;select.append(option);
+}
+select.value='claude-opus-5-5';
 let generation=0;
 function invalidate(){generation++;$('result').hidden=true;$('progress').textContent='';$('progress').className='';$('verify').disabled=false;}
+select.addEventListener('change',invalidate);
 $('response').addEventListener('change',()=>{invalidate();$('paste').value='';$('filename').textContent=$('response').files[0]?.name||'尚未选择文件';});
 $('paste').addEventListener('input',()=>{invalidate();$('response').value='';$('filename').textContent='使用粘贴的响应';});
 $('request').addEventListener('change',invalidate);
@@ -590,7 +804,8 @@ $('verify').addEventListener('click',async()=>{
   if(req&&req.size>1024*1024)throw new Error('请求文件超过 1 MiB');
   const response=file?new Uint8Array(await file.arrayBuffer()):new TextEncoder().encode($('paste').value);
   if(!response.length)throw new Error('请先选择文件或粘贴完整响应');
-  const result=await verifyResponse(response,POLICY,req?new Uint8Array(await req.arrayBuffer()):undefined);
+  const selected=POLICY.models?.[select.value]||POLICY;
+  const result=await verifyResponse(response,{...selected,pcr0:POLICY.pcr0,model:select.value},req?new Uint8Array(await req.arrayBuffer()):undefined);
   if(current!==generation)return;
   $('verdict').textContent=result.ok?'验证通过':'验证未通过';
   $('scope').textContent=result.ok?(result.mode==='full'?'来源、响应及原始请求字节均通过核验。':'官方来源和响应正文核验通过；未验证供应商收到的请求与原始请求完全一致。'):'至少一项检查失败，请勿把这条响应当作已验证结果。';

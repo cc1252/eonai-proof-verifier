@@ -6,9 +6,9 @@
 
 ## 客户使用
 
-1. 用中转站客户令牌调用 `https://api.eonaibusiness.com/verified/response/v1/messages`，模型 `claude-opus-5-5`，`stream: true`，`max_tokens` 1–8192。
+1. 用中转站客户令牌调用 `https://api.eonaibusiness.com/verified/response`：Claude、Kimi、已接入的火山模型使用 `/v1/messages`，GPT 和 Grok 使用 `/v1/responses`，必须 `stream: true`。目录包含 32 个实测模型，见 `policy.js`。
 2. 将完整 SSE 响应保存为原始字节，必须包含正文和最后的 `event: tee.proof`。Windows 使用 `curl.exe -o response.sse`，不要用 PowerShell 重定向改写编码。
-3. 打开验证页面选择文件或粘贴完整响应。材料在本机处理，不需要把客户令牌交给验证器。
+3. 打开验证页面先选择实际调用的模型，再选择文件或粘贴完整响应。材料在本机处理，不需要把客户令牌交给验证器。
 4. 也可下载本仓库的 `verify-offline.html`，断网后直接在浏览器打开。它自包含所有代码，不请求远程资源。
 
 响应验证检查 AWS Nitro G1 根证书链、当前证书有效期、可信 PCR0、公钥绑定、nonce 一致性、官方 host/path、Ed25519 签名、响应 SHA-256、原生模型字段和完整结束事件。任何失败都不能标为通过。
