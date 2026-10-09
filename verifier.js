@@ -552,4 +552,3 @@ export async function verifyResponse(rawBytes, policy, requestBytes) {
     normalizedKeepalives:normalized.ignoredTransportKeepaliveCount||0,
     restoredLineEndings:normalized.restoredLfLineEndings||0,savedEncoding:decoded.encoding};
 }
-

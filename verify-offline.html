@@ -567,7 +567,6 @@ async function verifyResponse(rawBytes, policy, requestBytes) {
     restoredLineEndings:normalized.restoredLfLineEndings||0,savedEncoding:decoded.encoding};
 }
 
-
 // Trusted reference value, never adopted from an uploaded proof.
 const POLICY = Object.freeze({
   model: 'claude-opus-5-5',
