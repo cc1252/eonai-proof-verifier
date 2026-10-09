@@ -12,7 +12,7 @@ select{display:block;width:100%;margin:12px 0 8px;padding:13px;border:1px solid 
 Claude / Kimi / 火山模型：POST /v1/messages
 GPT / Grok：POST /v1/responses
 stream: true
-输出上限：1–8192</pre><p>先完成验证再返回响应，因此不会立即逐 token 输出。缺少证明、上游出错或核验失败时拒绝返回结果。Windows 请使用 <code>curl.exe -o response.sse</code> 保存原始字节。</p><details><summary>可信参考值与验证边界</summary><p>我们转交供应商生成的硬件证明，未自行运行该证明的 Nitro enclave。浏览器固定 AWS Nitro G1 根指纹和下列公开 PCR0，不接受上传文件自报的参考值。</p><code class="fingerprint" id="pcr"></code><p>来源与响应验证可以确认官方端点及响应字节完整性；不能确认内部模型权重，也不能确认供应商未修改请求。证书过期会失败；相同请求之间的旧响应重放不由本协议完全解决。</p><p>你可以下载开源版本，在自己的本机离线验证，无需信任本站提供的绿色提示。源码及版权来源保留在开源仓库的 NOTICE 和许可证中。</p></details></section>
+显式输出上限：1–8192（Responses 可省略）</pre><p>先完成验证再返回响应，因此不会立即逐 token 输出。缺少证明、上游出错或核验失败时拒绝返回结果。Windows 请使用 <code>curl.exe -o response.sse</code> 保存原始字节。</p><details><summary>可信参考值与验证边界</summary><p>我们转交供应商生成的硬件证明，未自行运行该证明的 Nitro enclave。浏览器固定 AWS Nitro G1 根指纹和下列公开 PCR0，不接受上传文件自报的参考值。</p><code class="fingerprint" id="pcr"></code><p>来源与响应验证可以确认官方端点及响应字节完整性；不能确认内部模型权重，也不能确认供应商未修改请求。证书过期会失败；相同请求之间的旧响应重放不由本协议完全解决。</p><p>你可以下载开源版本，在自己的本机离线验证，无需信任本站提供的绿色提示。源码及版权来源保留在开源仓库的 NOTICE 和许可证中。</p></details></section>
 </main><footer>本机处理 · 无 API Key · 无文件上传<a href="/verify/verify-offline.html" download>下载离线验证器</a><a href="/verify/NOTICE.txt">版权与来源</a><a href="/verify/LICENSE">许可证</a></footer><script type="module">// SPDX-License-Identifier: MIT OR Apache-2.0
 // Derived from proof-of-observation bf21141f0a76090061d1a0a6709688618ff753c8.
 // Browser parser hardening and EonAI policy are modifications; see NOTICE.
