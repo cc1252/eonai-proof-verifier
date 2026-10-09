@@ -1,0 +1,16 @@
+EonAI Proof Verifier
+Copyright (c) 2026 EonAI contributors
+
+Derived portions of verifier.js originate from proof-of-observation contributors:
+https://github.com/focuxdot/proof-of-observation
+Source revision: bf21141f0a76090061d1a0a6709688618ff753c8
+Original sources: docs/tee-verify.html, verifier/verify-attestation-cose.mjs
+Original license: MIT OR Apache-2.0 (both texts included).
+
+Modifications: standalone browser module, bounded parser, strict current
+certificate validity, pinned trusted policy, host/path/model checks, optional
+exact request binding, and EonAI interface. No mock attestation is accepted.
+
+This repository verifies provider-issued evidence. It does not claim EonAI
+operates the observed Nitro enclave. Public reference measurements remain
+traceable to their original project. Keep copyright and license notices when copying.

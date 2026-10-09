@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EonAI · 响应验证</title><style>:root{color-scheme:light;--ink:#18332e;--muted:#64756f;--line:#dbe5df;--accent:#17664d;--paper:#f5f7f3}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.7 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}header{max-width:1080px;margin:auto;padding:26px 30px;display:flex;justify-content:space-between;align-items:center}.brand{font-size:24px;font-weight:750;letter-spacing:-1px}.brand span{font-size:13px;margin-left:14px;font-weight:400;letter-spacing:0;color:var(--muted)}nav{display:flex;gap:26px;font-size:13px}main{max-width:920px;margin:40px auto 80px;padding:0 30px}.eyebrow,.step{font-size:12px;letter-spacing:1.5px;color:var(--accent);font-weight:650}h1{font-size:clamp(30px,4vw,43px);line-height:1.3;letter-spacing:-1px;margin:14px 0}h2{font-size:21px;margin:12px 0}p{color:var(--muted);margin:10px 0}.intro{max-width:660px;font-size:16px;margin-bottom:32px}section{border:1px solid var(--line);border-radius:18px;padding:30px;margin:22px 0;background:white}.file-button,button{display:inline-block;border:0;border-radius:9px;background:var(--accent);color:white;padding:12px 20px;font:inherit;cursor:pointer}.file-button{margin:14px 12px 4px 0}#filename{font-size:13px;color:var(--muted);overflow-wrap:anywhere}.or{font-size:13px;color:var(--muted);margin:18px 0 8px}textarea{width:100%;height:145px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:14px;background:#fafcf9;color:var(--ink);font:12px/1.6 ui-monospace,monospace}textarea:focus{outline:2px solid #8bc0a9}.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:22px}.secondary{background:#edf2ed;color:var(--ink)}button:disabled{opacity:.6;cursor:wait}details{margin-top:18px;font-size:13px}summary{cursor:pointer;color:var(--accent)}details p{margin-top:12px}code,pre{font-family:ui-monospace,monospace;font-size:12px}pre{background:#f2f6f1;border-radius:9px;padding:18px;white-space:pre-wrap;overflow-wrap:anywhere}.fingerprint{display:block;padding:12px;background:#f2f6f1;overflow-wrap:anywhere}.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:20px 0;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}.facts strong{display:block;font-size:14px;margin-top:7px;color:var(--ink);overflow-wrap:anywhere}#checks{list-style:none;margin:15px 0 0;padding:0}#checks li{padding:8px 0;display:flex;gap:10px;font-size:14px}.pass{color:var(--accent)}.fail{color:#a73c38}.result.failed{border-color:#e0b4ae}.result.passed{border-color:#7fbaa0}footer{max-width:920px;padding:0 30px 35px;margin:auto;color:var(--muted);font-size:12px;display:flex;gap:24px;flex-wrap:wrap}@media(max-width:620px){header{padding:20px}nav{gap:12px;font-size:12px}.brand span{display:none}main{margin-top:25px;padding:0 18px}section{padding:22px}.facts{grid-template-columns:1fr}.actions button{flex:1}footer{padding:0 20px 25px}}
+</style></head>
+<body><header><a class="brand" href="https://eonaibusiness.com">EonAI<span>响应验证</span></a><nav><a href="https://github.com/cc1252/eonai-proof-verifier" target="_blank" rel="noopener">开源资料 ↗</a><a href="https://eonaibusiness.com">返回中转站</a></nav></header>
+<main><div class="eyebrow">在你的浏览器里独立验证</div><h1>确认来源，检查响应是否完整。</h1><p class="intro">上传完整 API 响应，核对官方来源、模型与签名。文件在本机处理，不上传服务器，也不需要 API Key。</p>
+<section class="upload"><div class="step">01 · 选择响应</div><h2>把完整响应文件放到这里</h2><p>应包含响应正文及末尾的 <code>tee.proof</code>。仅上传证明，无法确认正文完整。</p><label class="file-button" for="response">选择响应文件</label><input id="response" type="file" accept=".sse,.txt,.json,.bin" hidden><span id="filename">尚未选择文件</span><div class="or">或者粘贴完整响应</div><textarea id="paste" placeholder="event: message_start&#10;data: …&#10;&#10;event: tee.proof&#10;data: …" aria-label="完整响应内容"></textarea>
+<details><summary>同时验证请求是否完全一致（可选）</summary><p>上传自己实际发送的原始请求文件。当前通道的请求哈希实测不一致，完整请求验证会失败；仅验证响应不能确认供应商未修改请求。</p><input id="request" type="file" accept=".json,.txt,.bin" aria-label="原始请求文件"></details>
+<div class="actions"><button id="verify">开始本机验证</button><button id="clear" class="secondary">清空材料</button><span id="progress" role="status" aria-live="polite"></span></div></section>
+<section id="result" class="result" hidden aria-live="polite"><div class="step">02 · 验证结果</div><h2 id="verdict"></h2><p id="scope"></p><div class="facts"><div>官方来源<strong id="host">未确认</strong></div><div>响应中的模型<strong id="model">未确认</strong></div><div>验证范围<strong id="mode"></strong></div></div><ul id="checks"></ul></section>
+<section class="help"><h2>客户如何拿到验证材料？</h2><p>使用你的中转站客户令牌，通过下方入口发送原生 Anthropic 流式请求，保存完整响应文件，再回到这里上传。</p><pre>Base URL: https://api.eonaibusiness.com/verified/response
+接口：POST /v1/messages
+模型：claude-opus-5-5
+stream: true
+max_tokens: 1–8192</pre><p>先完成验证再返回响应，因此不会立即逐 token 输出。Windows 请使用 <code>curl.exe -o response.sse</code> 保存原始字节。</p><details><summary>可信参考值与验证边界</summary><p>我们转交供应商生成的硬件证明，未自行运行该证明的 Nitro enclave。浏览器固定 AWS Nitro G1 根指纹和下列公开 PCR0，不接受上传文件自报的参考值。</p><code class="fingerprint" id="pcr"></code><p>来源与响应验证可以确认官方端点及响应字节完整性；不能确认内部模型权重，也不能确认供应商未修改请求。证书过期会失败；相同请求之间的旧响应重放不由本协议完全解决。</p><p>你可以下载开源版本，在自己的本机离线验证，无需信任本站提供的绿色提示。源码及版权来源保留在开源仓库的 NOTICE 和许可证中。</p></details></section>
+</main><footer>本机处理 · 无 API Key · 无文件上传<a href="/verify/verify-offline.html" download>下载离线验证器</a><a href="/verify/NOTICE.txt">版权与来源</a><a href="/verify/LICENSE">许可证</a></footer><script type="module">// SPDX-License-Identifier: MIT OR Apache-2.0
+// Derived from proof-of-observation bf21141f0a76090061d1a0a6709688618ff753c8.
+// Browser parser hardening and EonAI policy are modifications; see NOTICE.
+// ───────── 与 verifier/signing.ts + verify-attestation-cose.mjs 对齐的规范化（务必逐字节一致）─────────
+const te = new TextEncoder();
+// v2 字段分解声明的域名(docs/tee-signing-v2-design.md);布局须与 verifier/signing.ts buildV2Statement 逐字节一致。
+const SIGNING_DOMAIN_V2 = 'tee-exchange-v2';
+const WOKEY_SSE_TRANSPORT_KEEPALIVE_V1 = te.encode(': wokey-transport-keepalive-v1\n\n');
+const b64ToBytes = (b)=>{const s=atob(b);const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;};
+const bytesToB64 = (u)=>{let s='';for(const b of u)s+=String.fromCharCode(b);return btoa(s);};
+const bytesToHex = (u)=>Array.from(u).map(b=>b.toString(16).padStart(2,'0')).join('');
+const concat = (a)=>{const n=a.reduce((x,y)=>x+y.length,0);const o=new Uint8Array(n);let p=0;for(const x of a){o.set(x,p);p+=x.length;}return o;};
+const sha256 = async(b)=>new Uint8Array(await crypto.subtle.digest('SHA-256',b));
+const td = new TextDecoder();
+const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+const short = (s)=> s && s.length>16 ? s.slice(0,10)+'…'+s.slice(-6) : s;
+const textToB64 = (s)=>bytesToB64(te.encode(s));
+
+function isProofWire(o){
+  return !!o && typeof o==='object' && o.public_key && o.nonce && o.signature && o.attestation
+    && o.upstream_host!==undefined && o.request_body_sha256!==undefined && o.response_body_sha256!==undefined;
+}
+function startsWithBytes(bytes,prefix,offset=0){
+  if(offset<0||offset+prefix.length>bytes.length)return false;
+  for(let i=0;i<prefix.length;i++)if(bytes[offset+i]!==prefix[i])return false;
+  return true;
+}
+function findLastBytes(bytes,needle){
+  if(!needle.length||needle.length>bytes.length)return -1;
+  for(let i=bytes.length-needle.length;i>=0;i--)if(startsWithBytes(bytes,needle,i))return i;
+  return -1;
+}
+function trimSseDataPrefix(line,prefix){
+  let p=prefix.length;
+  while(p<line.length&&(line[p]===32||line[p]===9))p++;
+  return line.subarray(p);
+}
+function isAsciiWhitespaceByte(b){
+  return b===9||b===10||b===13||b===32;
+}
+function parseProofEventBytes(bytes){
+  const markerLf=te.encode('event: tee.proof\n');
+  const markerCrLf=te.encode('event: tee.proof\r\n');
+  const idx=Math.max(findLastBytes(bytes,markerLf),findLastBytes(bytes,markerCrLf));
+  if(idx<0)return null;
+  const before=bytes.subarray(0,idx);
+  const eventBlock=bytes.subarray(idx);
+  const dataPrefix=te.encode('data:');
+  const dataLines=[];
+  let eventEnd=-1;
+  for(let p=0;p<=eventBlock.length;){
+    const nl=eventBlock.indexOf(10,p);
+    const end=nl>=0?nl:eventBlock.length;
+    let line=eventBlock.subarray(p,end);
+    if(line.length&&line[line.length-1]===13)line=line.subarray(0,line.length-1);
+    if(startsWithBytes(line,dataPrefix))dataLines.push(td.decode(trimSseDataPrefix(line,dataPrefix)));
+    else if(line.length===0&&dataLines.length){eventEnd=nl>=0?nl+1:eventBlock.length;break;}
+    if(nl<0)break;
+    p=nl+1;
+  }
+  if(!dataLines.length)return null;
+  // 容忍最后一个事件缺少结尾空行/换行:流末尾本身即终止该事件(SSE 规范),按 curl 落盘/终端复制常丢尾换行的现实放宽。
+  // 仅当未找到终止空行时把事件视作延伸到流末尾;若中途已找到空行后又出现非空白内容,仍按下方校验拒绝(tee.proof 必须是末事件)。
+  if(eventEnd<0)eventEnd=eventBlock.length;
+  for(let i=eventEnd;i<eventBlock.length;i++)if(!isAsciiWhitespaceByte(eventBlock[i]))return null;
+  const proof=JSON.parse(dataLines.join('\n'));
+  if(!isProofWire(proof))throw new Error(typeof L==='function'?L('tee.proof data 字段不是有效证明材料','tee.proof data field is not valid proof material'):'tee.proof data 字段不是有效证明材料');
+  // The capture starts at byte zero. Exact relay transport keepalives are
+  // normalized later only at SSE record boundaries and only when the signed
+  // response hash proves the complete removal.
+  return {bodyBytes:before,proof};
+}
+function parseProofEventText(text){
+  return parseProofEventBytes(te.encode(text));
+}
+function parseLooseProofData(text){
+  const s=text.trim();
+  if(!s)return null;
+  const dataMatch=s.match(/^data:\s*(\{[\s\S]*\})\s*$/m);
+  const candidate=dataMatch?dataMatch[1]:s;
+  try{
+    const o=JSON.parse(candidate);
+    return isProofWire(o)?o:null;
+  }catch{return null;}
+}
+function findBytes(bytes,needle,offset=0){
+  if(!needle.length||needle.length>bytes.length)return -1;
+  for(let i=Math.max(0,offset);i<=bytes.length-needle.length;i++)if(startsWithBytes(bytes,needle,i))return i;
+  return -1;
+}
+function consumeLineEnding(bytes,offset){
+  if(bytes[offset]===13&&bytes[offset+1]===10)return offset+2;
+  if(bytes[offset]===10)return offset+1;
+  return -1;
+}
+function firstMultipartBoundary(bytes){
+  const dash=te.encode('--');
+  let start=startsWithBytes(bytes,dash,0)?0:-1;
+  if(start<0){
+    for(let i=0;i<bytes.length;i++){
+      if(bytes[i]===10&&startsWithBytes(bytes,dash,i+1)){start=i+1;break;}
+    }
+  }
+  if(start<0)return null;
+  const nl=bytes.indexOf(10,start);
+  if(nl<0)return null;
+  let line=bytes.subarray(start,nl);
+  if(line.length&&line[line.length-1]===13)line=line.subarray(0,line.length-1);
+  const text=td.decode(line);
+  if(!text.startsWith('--')||text.endsWith('--'))return null;
+  return {boundary:text.slice(2),offset:start};
+}
+function stripBoundarySeparatorLineEnding(bytes){
+  if(bytes.length>=2&&bytes[bytes.length-2]===13&&bytes[bytes.length-1]===10)return bytes.subarray(0,bytes.length-2);
+  if(bytes.length>=1&&bytes[bytes.length-1]===10)return bytes.subarray(0,bytes.length-1);
+  return bytes;
+}
+function isProofPartHeaders(headers){
+  return /content-disposition:\s*[^;\r\n]*(?:;\s*)?name="?proof"?/i.test(headers)
+    || /content-type:\s*application\/[^;\r\n]*proof[^;\r\n]*/i.test(headers);
+}
+function readMultipartBoundary(bytes,boundaryBytes,offset){
+  if(!startsWithBytes(bytes,boundaryBytes,offset))return null;
+  let p=offset+boundaryBytes.length;
+  const closing=bytes[p]===45&&bytes[p+1]===45;
+  if(closing)p+=2;
+  if(closing&&p===bytes.length)return {closing,nextOffset:p};
+  const nextOffset=consumeLineEnding(bytes,p);
+  if(nextOffset<0)return null;
+  return {closing,nextOffset};
+}
+function multipartHeaderEnd(bytes,offset){
+  const crlf=findBytes(bytes,te.encode('\r\n\r\n'),offset);
+  const lf=findBytes(bytes,te.encode('\n\n'),offset);
+  if(crlf>=0&&(lf<0||crlf<lf))return {headerEnd:crlf,bodyStart:crlf+4};
+  if(lf>=0)return {headerEnd:lf,bodyStart:lf+2};
+  return null;
+}
+function multipartContentLength(headers){
+  const lines=headers.split(/\r?\n/);
+  for(const line of lines){
+    const m=line.match(/^content-length:\s*(\d+)\s*$/i);
+    if(!m)continue;
+    const n=Number.parseInt(m[1],10);
+    return Number.isFinite(n)&&n>=0?n:null;
+  }
+  return null;
+}
+function readMultipartPart(bytes,boundaryBytes,offset){
+  const headerEnd=multipartHeaderEnd(bytes,offset);
+  if(!headerEnd)return null;
+  const headers=td.decode(bytes.subarray(offset,headerEnd.headerEnd));
+  const length=multipartContentLength(headers);
+  const bodyStart=headerEnd.bodyStart;
+  let bodyEnd=-1, nextBoundaryOffset=-1;
+  if(length!==null){
+    const expectedEnd=bodyStart+length;
+    if(expectedEnd<=bytes.length){
+      const expectedNext=consumeLineEnding(bytes,expectedEnd);
+      if(expectedNext>=0&&startsWithBytes(bytes,boundaryBytes,expectedNext)){ bodyEnd=expectedEnd; nextBoundaryOffset=expectedNext; }
+    }
+  }
+  if(bodyEnd<0){
+    const boundaryText=td.decode(boundaryBytes);
+    const crlfBoundary=findBytes(bytes,te.encode('\r\n'+boundaryText),bodyStart);
+    const lfBoundary=findBytes(bytes,te.encode('\n'+boundaryText),bodyStart);
+    let marker=-1, markerLen=0;
+    if(crlfBoundary>=0&&(lfBoundary<0||crlfBoundary<=lfBoundary)){ marker=crlfBoundary; markerLen=2; }
+    else if(lfBoundary>=0){ marker=lfBoundary; markerLen=1; }
+    if(marker<0)return null;
+    bodyEnd=marker;
+    nextBoundaryOffset=marker+markerLen;
+  }
+  return {headers,body:bytes.subarray(bodyStart,bodyEnd),nextBoundaryOffset};
+}
+function parseProofMultipartBytes(bytes){
+  const first=firstMultipartBoundary(bytes);
+  if(!first)return null;
+  const capture=bytes.subarray(first.offset);
+  const boundaryBytes=te.encode('--'+first.boundary);
+  const firstBoundary=readMultipartBoundary(capture,boundaryBytes,0);
+  if(!firstBoundary||firstBoundary.closing)return null;
+  const responsePart=readMultipartPart(capture,boundaryBytes,firstBoundary.nextOffset);
+  if(!responsePart)return null;
+  const proofBoundary=readMultipartBoundary(capture,boundaryBytes,responsePart.nextBoundaryOffset);
+  if(!proofBoundary||proofBoundary.closing){
+    if(first.offset<=0||!isProofPartHeaders(responsePart.headers))return null;
+    let proof=null, unavailable=null;
+    try{
+      const parsed=JSON.parse(td.decode(responsePart.body));
+      if(isProofWire(parsed))proof=parsed;
+      else if(parsed&&parsed.type==='tee.proof_unavailable')unavailable=parsed;
+    }catch{}
+    return {bodyBytes:stripBoundarySeparatorLineEnding(bytes.subarray(0,first.offset)),proof,unavailable,tail:true};
+  }
+  const proofPart=readMultipartPart(capture,boundaryBytes,proofBoundary.nextOffset);
+  if(!proofPart)return null;
+  const closingBoundary=readMultipartBoundary(capture,boundaryBytes,proofPart.nextBoundaryOffset);
+  if(!closingBoundary||!closingBoundary.closing)return null;
+  let proof=null, unavailable=null;
+  try{
+    const parsed=JSON.parse(td.decode(proofPart.body));
+    if(isProofWire(parsed))proof=parsed;
+    else if(parsed&&parsed.type==='tee.proof_unavailable')unavailable=parsed;
+  }catch{}
+  return {bodyBytes:responsePart.body,proof,unavailable,tail:false};
+}
+function validSha256Hex(s){
+  return typeof s==='string' && /^[a-f0-9]{64}$/i.test(s);
+}
+function consumeLeadingBlankLine(bytes,offset){
+  let p=offset;
+  while(bytes[p]===32||bytes[p]===9)p++;
+  if(bytes[p]===13&&bytes[p+1]===10)return p+2;
+  if(bytes[p]===10)return p+1;
+  return -1;
+}
+async function normalizePastedBodyBytes(bodyBytes,proof,allowLeadingBlankTrim){
+  if(!allowLeadingBlankTrim || !proof || !validSha256Hex(proof.response_body_sha256)){
+    return {bodyBytes,ignoredLeadingBytes:0};
+  }
+  const expected=String(proof.response_body_sha256).toLowerCase();
+  if(bytesToHex(await sha256(bodyBytes))===expected)return {bodyBytes,ignoredLeadingBytes:0};
+  let offset=0;
+  for(;;){
+    const next=consumeLeadingBlankLine(bodyBytes,offset);
+    if(next<=offset)return {bodyBytes,ignoredLeadingBytes:0};
+    offset=next;
+    const candidate=bodyBytes.subarray(offset);
+    if(bytesToHex(await sha256(candidate))===expected){
+      return {bodyBytes:candidate,ignoredLeadingBytes:offset};
+    }
+  }
+}
+async function normalizeSseTransportKeepalives(bodyBytes,proof){
+  if(!proof || !validSha256Hex(proof.response_body_sha256)){
+    return {bodyBytes,ignoredTransportKeepaliveBytes:0,ignoredTransportKeepaliveCount:0};
+  }
+  const expected=String(proof.response_body_sha256).toLowerCase();
+  if(bytesToHex(await sha256(bodyBytes))===expected){
+    return {bodyBytes,ignoredTransportKeepaliveBytes:0,ignoredTransportKeepaliveCount:0};
+  }
+  const kept=[];
+  let searchOffset=0,copyOffset=0,count=0;
+  for(;;){
+    const index=findBytes(bodyBytes,WOKEY_SSE_TRANSPORT_KEEPALIVE_V1,searchOffset);
+    if(index<0)break;
+    const atRecordBoundary=index===0
+      ||(index>=2&&bodyBytes[index-2]===10&&bodyBytes[index-1]===10)
+      ||(index>=4&&bodyBytes[index-4]===13&&bodyBytes[index-3]===10&&bodyBytes[index-2]===13&&bodyBytes[index-1]===10);
+    if(!atRecordBoundary){searchOffset=index+1;continue;}
+    kept.push(bodyBytes.subarray(copyOffset,index));
+    copyOffset=index+WOKEY_SSE_TRANSPORT_KEEPALIVE_V1.length;
+    searchOffset=copyOffset;
+    count++;
+  }
+  if(count){
+    kept.push(bodyBytes.subarray(copyOffset));
+    const candidate=concat(kept);
+    if(bytesToHex(await sha256(candidate))===expected){
+      return {bodyBytes:candidate,ignoredTransportKeepaliveBytes:count*WOKEY_SSE_TRANSPORT_KEEPALIVE_V1.length,ignoredTransportKeepaliveCount:count};
+    }
+  }
+  return {bodyBytes,ignoredTransportKeepaliveBytes:0,ignoredTransportKeepaliveCount:0};
+}
+// 存成文件再上传的抓包常被 Windows 工具把 LF 改成 CRLF(PowerShell 的 > 重定向、记事本另存等)。
+// 上游 SSE 只用 LF,换行只出现在记录分隔处(JSON 里的换行是转义的),还原成 LF 不改动任何事件内容;
+// 仍以签名哈希为闸:还原后对上签名覆盖的 hash 才采用,否则原样返回、照常判失败。
+async function normalizeSseLineEndings(bodyBytes,proof){
+  const none={bodyBytes,restoredLfLineEndings:0,ignoredTransportKeepaliveBytes:0,ignoredTransportKeepaliveCount:0};
+  if(!proof || !validSha256Hex(proof.response_body_sha256))return none;
+  const expected=String(proof.response_body_sha256).toLowerCase();
+  if(bytesToHex(await sha256(bodyBytes))===expected)return none;
+  const parts=[],lf=te.encode('\n'),crlf=te.encode('\r\n');
+  let copyOffset=0,count=0;
+  for(;;){
+    const index=findBytes(bodyBytes,crlf,copyOffset);
+    if(index<0)break;
+    parts.push(bodyBytes.subarray(copyOffset,index),lf);
+    copyOffset=index+2;
+    count++;
+  }
+  if(!count)return none;
+  parts.push(bodyBytes.subarray(copyOffset));
+  const normalized=await normalizeSseTransportKeepalives(concat(parts),proof);
+  if(bytesToHex(await sha256(normalized.bodyBytes))!==expected)return none;
+  return {...normalized,restoredLfLineEndings:count};
+}
+// 文件编码被保存工具改过:Windows PowerShell 5.1 的 > 重定向写 UTF-16LE(带 BOM),记事本等可能在开头加 UTF-8 BOM。
+// 上游 SSE / multipart 是不带 BOM 的 UTF-8,原样字节不可能是这两种形态,所以先转回 UTF-8 再解析
+// 不会让本应通过的响应失败;转回后是否就是签名覆盖的字节,仍由 response hash 判定。
+function looksLikeBomlessUtf16(bytes,zeroAt){
+  if(bytes.length<8||bytes.length%2!==0)return false;
+  const end=Math.min(bytes.length,64);
+  for(let i=0;i<end;i+=2)if(bytes[i+zeroAt]!==0||bytes[i+1-zeroAt]===0)return false;
+  return true;
+}
+function decodeSavedCapture(bytes){
+  if(bytes[0]===0xef&&bytes[1]===0xbb&&bytes[2]===0xbf)return {bytes:bytes.subarray(3),encoding:'utf-8-bom'};
+  let encoding=null,start=0;
+  if(bytes[0]===0xff&&bytes[1]===0xfe){encoding='utf-16le';start=2;}
+  else if(bytes[0]===0xfe&&bytes[1]===0xff){encoding='utf-16be';start=2;}
+  else if(looksLikeBomlessUtf16(bytes,1))encoding='utf-16le';
+  else if(looksLikeBomlessUtf16(bytes,0))encoding='utf-16be';
+  if(!encoding)return {bytes,encoding:null};
+  const units=new Uint8Array(bytes.subarray(start,bytes.length-((bytes.length-start)%2)));
+  if(encoding==='utf-16be')for(let i=0;i<units.length;i+=2){const b=units[i];units[i]=units[i+1];units[i+1]=b;}
+  return {bytes:te.encode(new TextDecoder('utf-16le').decode(units)),encoding};
+}
+
+// v2 字段分解声明:与 verifier/signing.ts buildV2Statement 逐字节一致(golden 向量锁)。
+function pathNoQuery(p){const s=p||'';const q=s.indexOf('?');return q>=0?s.slice(0,q):s;}
+function buildV2Statement(t){
+  const lines=[
+    SIGNING_DOMAIN_V2,
+    'nonce='+t.nonce,
+    'upstream-host='+String(t.upstream_host||'').toLowerCase(),
+    'upstream-path='+pathNoQuery(t.upstream_path),
+    'http-method='+String(t.http_method||'').toUpperCase(),
+    'http-status='+String(t.http_status),
+    'resp-content-type='+String(t.resp_content_type||''),
+    'request-body-sha256='+t.request_body_sha256,
+    'response-body-sha256='+t.response_body_sha256,
+  ];
+  return te.encode(lines.map(l=>l+'\n').join(''));
+}
+function attestationSigningBytes(a){return te.encode(JSON.stringify({module_id:a.module_id,pcr0:a.pcr0,public_key:a.public_key,timestamp:a.timestamp}));}
+async function importSpkiPem(pem){const der=b64ToBytes(pem.replace(/-----[^-]+-----/g,'').replace(/\s+/g,''));return crypto.subtle.importKey('spki',der,{name:'Ed25519'},false,['verify']);}
+async function importSpkiB64(b){return crypto.subtle.importKey('spki',b64ToBytes(b),{name:'Ed25519'},false,['verify']);}
+const edVerify = (k,sig,msg)=>crypto.subtle.verify({name:'Ed25519'},k,b64ToBytes(sig),msg);
+
+// ───────── 真 Nitro attestation（COSE_Sign1 / ECDSA P-384 / X.509）浏览器验证器 ─────────
+// 与 verifier/verify-attestation-cose.mjs 逐字对齐，但用 WebCrypto（P-384）+ 手写 ASN.1。
+// AWS Nitro 根（G1）SHA-256 指纹，硬编码 pin（官方公布值）：
+const AWS_NITRO_ROOT_FP='64:1A:03:21:A3:E2:44:EF:E4:56:46:31:95:D6:06:31:7E:D7:CD:CC:3C:17:56:E0:98:93:F3:C6:8F:79:BB:5B';
+const MAX_CBOR_DEPTH = 32;
+const MAX_CBOR_CONTAINER_ITEMS = 1024;
+const MAX_CBOR_STRING_BYTES = 262144;
+const CBOR_BREAK = Symbol('cbor.break');
+
+function cborError(message) {
+  throw new Error(`invalid CBOR: ${message}`);
+}
+
+function requireAvailable(b, p, n) {
+  if (!Number.isSafeInteger(p) || !Number.isSafeInteger(n) || p < 0 || n < 0 || p + n > b.length) {
+    cborError('truncated item');
+  }
+}
+
+function readAdditional(b, p, ai) {
+  if (ai < 24) return [ai, p];
+  if (ai === 24) { requireAvailable(b, p, 1); return [b[p], p + 1]; }
+  if (ai === 25) { requireAvailable(b, p, 2); return [new DataView(b.buffer,b.byteOffset,b.byteLength).getUint16(p), p + 2]; }
+  if (ai === 26) { requireAvailable(b, p, 4); return [new DataView(b.buffer,b.byteOffset,b.byteLength).getUint32(p), p + 4]; }
+  if (ai === 27) {
+    requireAvailable(b, p, 8);
+    const v = new DataView(b.buffer,b.byteOffset,b.byteLength).getBigUint64(p);
+    if (v > BigInt(Number.MAX_SAFE_INTEGER)) cborError('integer too large');
+    return [Number(v), p + 8];
+  }
+  if (ai === 31) cborError('unexpected indefinite-length marker');
+  cborError('invalid additional information');
+}
+
+function boundedSlice(b, p, len, kind) {
+  if (len > MAX_CBOR_STRING_BYTES) cborError(`${kind} too large`);
+  requireAvailable(b, p, len);
+  return b.subarray(p, p + len);
+}
+
+function decodeIndefiniteCbor(b, p, mt, depth) {
+  switch (mt) {
+    case 2: {
+      const chunks = [];
+      let total = 0;
+      for (;;) {
+        let chunk;[chunk, p] = dec(b, p, depth + 1, true);
+        if (chunk === CBOR_BREAK) return [concat(chunks), p];
+        if (!(chunk instanceof Uint8Array)) cborError('non-bytes chunk in indefinite byte string');
+        total += chunk.length;
+        if (chunks.length >= MAX_CBOR_CONTAINER_ITEMS || total > MAX_CBOR_STRING_BYTES) cborError('byte string too large');
+        chunks.push(chunk);
+      }
+    }
+    case 3: {
+      const chunks = [];
+      let total = 0;
+      for (;;) {
+        let chunk;[chunk, p] = dec(b, p, depth + 1, true);
+        if (chunk === CBOR_BREAK) return [chunks.join(''), p];
+        if (typeof chunk !== 'string') cborError('non-text chunk in indefinite text string');
+        total += te.encode(chunk).length;
+        if (chunks.length >= MAX_CBOR_CONTAINER_ITEMS || total > MAX_CBOR_STRING_BYTES) cborError('text string too large');
+        chunks.push(chunk);
+      }
+    }
+    case 4: {
+      const a = [];
+      for (;;) {
+        let v;[v, p] = dec(b, p, depth + 1, true);
+        if (v === CBOR_BREAK) return [a, p];
+        if (a.length >= MAX_CBOR_CONTAINER_ITEMS) cborError('array too large');
+        a.push(v);
+      }
+    }
+    case 5: {
+      const m = Object.create(null);
+      let count = 0;
+      for (;;) {
+        let k, v;[k, p] = dec(b, p, depth + 1, true);
+        if (k === CBOR_BREAK) return [m, p];
+        [v, p] = dec(b, p, depth + 1);
+        if (count >= MAX_CBOR_CONTAINER_ITEMS) cborError('map too large');
+        if(typeof k!=='string'&&typeof k!=='number')cborError('map key type'); if(Object.hasOwn(m,k))cborError('duplicate map key'); m[k] = v;
+        count++;
+      }
+    }
+    default:
+      cborError('invalid indefinite-length item');
+  }
+}
+
+// 最小有界 CBOR 解码器:仅覆盖 attestation 文档用到的类型。
+function dec(b, p, depth = 0, allowBreak = false) {
+  if (depth > MAX_CBOR_DEPTH) cborError('nesting too deep');
+  requireAvailable(b, p, 1);
+  if (b[p] === 0xff) {
+    if (allowBreak) return [CBOR_BREAK, p + 1];
+    cborError('unexpected break');
+  }
+  const ib = b[p], mt = ib >> 5, ai = ib & 0x1f; p++;
+  if (ai === 31) return decodeIndefiniteCbor(b, p, mt, depth);
+  let len;[len, p] = readAdditional(b, p, ai);
+  switch (mt) {
+    case 0: return [len, p];
+    case 1: return [-1 - len, p];
+    case 2: return [boundedSlice(b, p, len, 'byte string'), p + len];
+    case 3: return [td.decode(boundedSlice(b, p, len, 'text string')), p + len];
+    case 4: {
+      if (len > MAX_CBOR_CONTAINER_ITEMS) cborError('array too large');
+      const a = [];
+      for (let i = 0; i < len; i++) { let v;[v, p] = dec(b, p, depth + 1); a.push(v); }
+      return [a, p];
+    }
+    case 5: {
+      if (len > MAX_CBOR_CONTAINER_ITEMS) cborError('map too large');
+      const m = Object.create(null);
+      for (let i = 0; i < len; i++) { let k, v;[k, p] = dec(b, p, depth + 1);[v, p] = dec(b, p, depth + 1); if(typeof k!=='string'&&typeof k!=='number')cborError('map key type'); if(Object.hasOwn(m,k))cborError('duplicate map key'); m[k] = v; }
+      return [m, p];
+    }
+    case 6: if(len!==18)cborError('unsupported tag'); return dec(b, p, depth + 1);
+    case 7: { if (ai === 20) return [false, p]; if (ai === 21) return [true, p]; return [null, p]; }
+    default: cborError('unknown major type');
+  }
+}
+
+function cborDec(b,p){if(!(b instanceof Uint8Array)||b.length>262144)throw new Error("CBOR bounds");return dec(b,p);}
+function cborBstr(b){
+  if(b.length<24)return concat([Uint8Array.of(0x40|b.length),b]);
+  if(b.length<256)return concat([Uint8Array.of(0x58,b.length),b]);
+  if(b.length<65536){const h=new Uint8Array(3);h[0]=0x59;new DataView(h.buffer).setUint16(1,b.length);return concat([h,b]);}
+  const h=new Uint8Array(5);h[0]=0x5a;new DataView(h.buffer).setUint32(1,b.length);return concat([h,b]);
+}
+const cborText=(s)=>{const b=te.encode(s);return concat([Uint8Array.of(0x60|b.length),b]);};
+function der(b,p){if(p<0||p+2>b.length)throw new Error('DER bounds');let tag=b[p],i=p+1,len=b[i];i++;if(len&0x80){const n=len&0x7f;if(n===0||n>4||i+n>b.length)throw new Error('DER length');len=0;for(let k=0;k<n;k++){len=(len*256)+b[i];i++;}}if(i+len>b.length)throw new Error('DER value bounds');return{tag,start:p,cstart:i,cend:i+len,end:i+len};}
+function derChildren(b,t){const o=[];let p=t.cstart;while(p<t.cend){const c=der(b,p);o.push(c);p=c.end;}return o;}
+function ecdsaDerToRaw(d,size){const seq=der(d,0);const[r,s]=derChildren(d,seq);
+  const norm=(t)=>{let v=d.subarray(t.cstart,t.cend);while(v.length>size&&v[0]===0)v=v.subarray(1);const o=new Uint8Array(size);o.set(v,size-v.length);return o;};
+  return concat([norm(r),norm(s)]);}
+function derTime(b,t){const s=new TextDecoder().decode(b.subarray(t.cstart,t.cend));
+  let i=0,y; if((t.tag&0xff)===0x17){y=+s.slice(0,2);y+=y<50?2000:1900;i=2;}else{y=+s.slice(0,4);i=4;}
+  return Date.UTC(y,(+s.slice(i,i+2))-1,+s.slice(i+2,i+4),+s.slice(i+4,i+6),+s.slice(i+6,i+8),+s.slice(i+8,i+10));}
+function parseCert(c){const top=der(c,0);const[tbs,,sigVal]=derChildren(c,top);
+  const tbsBytes=c.subarray(tbs.start,tbs.end);const tch=derChildren(c,tbs);
+  const vpres=((tch[0].tag&0xff)===0xa0);const spkiT=tch[vpres?6:5];
+  const[nbT,naT]=derChildren(c,tch[vpres?4:3]);
+  return{tbsBytes,spki:c.subarray(spkiT.start,spkiT.end),sigRaw:ecdsaDerToRaw(c.subarray(sigVal.cstart+1,sigVal.cend),48),
+    notBefore:derTime(c,nbT),notAfter:derTime(c,naT)};}
+const ecVerify=async(spki,sigRaw,msg)=>{const k=await crypto.subtle.importKey('spki',spki,{name:'ECDSA',namedCurve:'P-384'},false,['verify']);return crypto.subtle.verify({name:'ECDSA',hash:'SHA-384'},k,sigRaw,msg);};
+async function sha256hexColon(b){const h=new Uint8Array(await crypto.subtle.digest('SHA-256',b));return Array.from(h).map(x=>x.toString(16).padStart(2,'0').toUpperCase()).join(':');}
+async function verifyCoseAttestation(docB64){
+  if(typeof docB64!=='string'||docB64.length>350000)throw new Error('Attestation format');
+  const buf=b64ToBytes(docB64);
+  const[cose,coseEnd]=cborDec(buf,0);if(coseEnd!==buf.length||!Array.isArray(cose)||cose.length!==4)throw new Error('COSE envelope');
+  const[protectedRaw,,payloadRaw,sig]=cose;
+  if(!(protectedRaw instanceof Uint8Array)||!(payloadRaw instanceof Uint8Array)||!(sig instanceof Uint8Array)||sig.length!==96)throw new Error('COSE field types');
+  const[protectedHeader,headerEnd]=cborDec(protectedRaw,0);if(headerEnd!==protectedRaw.length||protectedHeader[1]!==-35)throw new Error('COSE algorithm');
+  const[doc,docEnd]=cborDec(payloadRaw,0);if(docEnd!==payloadRaw.length)throw new Error('COSE payload');
+  if(!Array.isArray(doc.cabundle)||doc.cabundle.length<1||doc.cabundle.length>8||!(doc.certificate instanceof Uint8Array)||!(doc.pcrs?.[0] instanceof Uint8Array)||doc.pcrs[0].length!==48)throw new Error('Attestation fields');
+  const leaf=parseCert(doc.certificate);
+  const sigStruct=concat([Uint8Array.of(0x84),cborText('Signature1'),cborBstr(protectedRaw),cborBstr(new Uint8Array(0)),cborBstr(payloadRaw)]);
+  const sigOk=await ecVerify(leaf.spki,sig,sigStruct);
+  const certs=[...doc.cabundle.map(parseCert),leaf];
+  let chainOk=true;
+  for(let i=1;i<certs.length;i++)chainOk=chainOk&&await ecVerify(certs[i-1].spki,certs[i].sigRaw,certs[i].tbsBytes);
+  const root=certs[0];
+  const rootSelf=await ecVerify(root.spki,root.sigRaw,root.tbsBytes);
+  const fp=await sha256hexColon(doc.cabundle[0]);
+  const now=Date.now();
+  const timeValid=certs.every(c=>now>=c.notBefore&&now<=c.notAfter);
+  return{sigOk,chainOk,rootSelf,rootPinned:fp===AWS_NITRO_ROOT_FP,timeValid,
+    leafNotAfter:new Date(leaf.notAfter).toISOString(),
+    pcr0:bytesToHex(doc.pcrs[0]),publicKey:doc.public_key?bytesToB64(doc.public_key):null,
+    nonce:doc.nonce?bytesToB64(doc.nonce):null,
+    moduleId:doc.module_id,rootFp:fp,
+    chainLen:certs.length,fields:Object.keys(doc),     // 弹窗用:链长 + 解出的字段表(让用户对照自己解的)
+    timestamp:typeof doc.timestamp==='number'?doc.timestamp:null,
+    digest:typeof doc.digest==='string'?doc.digest:null,
+    userData:doc.user_data?bytesToB64(doc.user_data):null};
+}
+
+async function verifyResponse(rawBytes, policy, requestBytes) {
+  if(!(rawBytes instanceof Uint8Array)||rawBytes.length>8*1024*1024)throw new Error('响应文件超过 8 MiB 或格式错误');
+  if(!/^[a-f0-9]{96}$/.test(policy.pcr0))throw new Error('可信 PCR0 格式错误');
+  const decoded=decodeSavedCapture(rawBytes), parsed=parseProofEventBytes(decoded.bytes);
+  if(!parsed)throw new Error('缺少完整 tee.proof；请保存完整原始响应');
+  const t=parsed.proof;
+  for(const field of ['public_key','nonce','upstream_host','upstream_path','http_method','resp_content_type','request_body_sha256','response_body_sha256','signature','attestation']) {
+    if(typeof t[field]!=='string'||/[\r\n]/.test(t[field]))throw new Error('证明字段格式错误');
+  }
+  if(t.v!==2||t.alg!=='ed25519'||!validSha256Hex(t.request_body_sha256)||!validSha256Hex(t.response_body_sha256))throw new Error('不支持的证明版本或摘要');
+  let normalized=await normalizeSseTransportKeepalives(parsed.bodyBytes,t);
+  if(bytesToHex(await sha256(normalized.bodyBytes))!==t.response_body_sha256) {
+    const restored=await normalizeSseLineEndings(parsed.bodyBytes,t);
+    if(bytesToHex(await sha256(restored.bodyBytes))===t.response_body_sha256)normalized=restored;
+  }
+  const body=normalized.bodyBytes, checks=[];
+  const check=async(name,fn)=>{let ok=false;try{ok=Boolean(await fn());}catch{}checks.push({name,ok});};
+  let att;try{att=await verifyCoseAttestation(t.attestation);}catch{}
+  await check('真实硬件证明与 AWS 根证书链',()=>att&&att.sigOk&&att.chainOk&&att.rootSelf&&att.rootPinned);
+  await check('证书在当前有效期内',()=>att?.timeValid);
+  await check('PCR0 与可信公开参考值一致',()=>att?.pcr0===policy.pcr0);
+  await check('签名公钥由硬件证明绑定',()=>att?.publicKey===t.public_key);
+  await check('证明与签名的 nonce 一致',()=>att?.nonce===t.nonce);
+  await check('官方来源与原生接口一致',()=>t.upstream_host===policy.host&&t.upstream_path==='/v1/messages'&&t.http_method==='POST'&&t.http_status===200&&t.resp_content_type.startsWith('text/event-stream'));
+  await check('Ed25519 声明签名有效',async()=>edVerify(await importSpkiB64(t.public_key),t.signature,buildV2Statement(t)));
+  await check('响应正文未被篡改',async()=>bytesToHex(await sha256(body))===t.response_body_sha256);
+  const events=td.decode(body).split(/\r?\n\r?\n/).map(record=>{
+    const data=record.split(/\r?\n/).filter(line=>line.startsWith('data:')).map(line=>line.slice(5).trimStart()).join('\n');
+    try{return JSON.parse(data);}catch{return null;}
+  });
+  const model=events.find(event=>event?.type==='message_start')?.message?.model;
+  await check('签名覆盖的模型与预期一致',()=>model===policy.model);
+  await check('响应包含完整结束事件',()=>events.some(event=>event?.type==='message_stop'));
+  const mode=requestBytes===undefined?'response-only':'full';
+  if(requestBytes!==undefined) {
+    if(!(requestBytes instanceof Uint8Array)||requestBytes.length>1024*1024)throw new Error('请求文件超过 1 MiB 或格式错误');
+    await check('原始请求字节与证明完全一致',async()=>bytesToHex(await sha256(requestBytes))===t.request_body_sha256);
+  }
+  return {ok:checks.every(c=>c.ok),checks,mode,host:t.upstream_host,model,
+    normalizedKeepalives:normalized.ignoredTransportKeepaliveCount||0,
+    restoredLineEndings:normalized.restoredLfLineEndings||0,savedEncoding:decoded.encoding};
+}
+
+
+// Trusted reference value, never adopted from an uploaded proof.
+const POLICY = Object.freeze({
+  model: 'claude-opus-5-5',
+  host: 'api.anthropic.com',
+  pcr0: '437cbab8c2e5dd11a35ae5b062fe115623a013910b7c26b333e2b3af477944d630fb1dcd76fa9a9b1eefdf1d1021dec2'
+});
+
+const $=id=>document.getElementById(id);
+$('pcr').textContent=POLICY.pcr0;
+let generation=0;
+function invalidate(){generation++;$('result').hidden=true;$('progress').textContent='';$('progress').className='';$('verify').disabled=false;}
+$('response').addEventListener('change',()=>{invalidate();$('paste').value='';$('filename').textContent=$('response').files[0]?.name||'尚未选择文件';});
+$('paste').addEventListener('input',()=>{invalidate();$('response').value='';$('filename').textContent='使用粘贴的响应';});
+$('request').addEventListener('change',invalidate);
+$('clear').addEventListener('click',()=>{invalidate();$('response').value='';$('request').value='';$('paste').value='';$('filename').textContent='尚未选择文件';});
+$('verify').addEventListener('click',async()=>{
+ const current=++generation;$('verify').disabled=true;$('result').hidden=true;$('progress').className='';$('progress').textContent='正在本机核对证书与签名…';
+ try{
+  const file=$('response').files[0],req=$('request').files[0];
+  if(file&&file.size>8*1024*1024)throw new Error('响应文件超过 8 MiB');
+  if(req&&req.size>1024*1024)throw new Error('请求文件超过 1 MiB');
+  const response=file?new Uint8Array(await file.arrayBuffer()):new TextEncoder().encode($('paste').value);
+  if(!response.length)throw new Error('请先选择文件或粘贴完整响应');
+  const result=await verifyResponse(response,POLICY,req?new Uint8Array(await req.arrayBuffer()):undefined);
+  if(current!==generation)return;
+  $('verdict').textContent=result.ok?'验证通过':'验证未通过';
+  $('scope').textContent=result.ok?(result.mode==='full'?'来源、响应及原始请求字节均通过核验。':'官方来源和响应正文核验通过；未验证供应商收到的请求与原始请求完全一致。'):'至少一项检查失败，请勿把这条响应当作已验证结果。';
+  $('host').textContent=result.ok?result.host:'未确认';$('model').textContent=result.ok?result.model:'未确认';$('mode').textContent=result.mode==='full'?'来源、响应与请求':'来源与响应';
+  $('checks').replaceChildren(...result.checks.map(check=>{const li=document.createElement('li');li.className=check.ok?'pass':'fail';li.textContent=(check.ok?'✓ ':'✕ ')+check.name;return li;}));
+  $('result').className='result '+(result.ok?'passed':'failed');$('result').hidden=false;$('progress').textContent='本机验证完成';
+ }catch(error){if(current===generation){$('progress').textContent=error.message;$('progress').className='fail';}}
+ finally{if(current===generation)$('verify').disabled=false;}
+});
+</script></body></html>
